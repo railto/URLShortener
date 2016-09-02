@@ -1,8 +1,10 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, url_for, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, login_required
+from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, login_required, current_user
 from dotenv import load_dotenv
 import os
+import string
+import random
 
 # Check to see if we have a .env file and load it if we do
 if os.path.exists(os.path.join(os.path.dirname(__file__), '.env')):
@@ -16,6 +18,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SECURITY_PASSWORD_HASH'] = 'bcrypt'
 app.config['SECURITY_PASSWORD_SALT'] = os.environ.get('SECURITY_PASSWORD_SALT')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
 # Setup DB
 db = SQLAlchemy(app)
@@ -41,8 +44,10 @@ class User(db.Model, UserMixin):
 
 class Link(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    shortcode = db.Column(db.String(16), unique=True)
+    link = db.Column(db.String(16), unique=True)
+    visits = db.Column(db.Integer)
     url = db.Column(db.String(255), unique=True)
+
     user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
 
 # Setup Flask-Security
@@ -52,13 +57,24 @@ security = Security(app, user_datastore)
 @app.route('/', methods=['get'])
 @login_required
 def home():
-    return render_template('index.html')
+    links = Link.query.all()
+    return render_template('index.html', links=links)
 
 @app.route('/link', methods=['post'])
 @login_required
 def add_link():
-    data = request.json
-    return "test"
+    form = request.form
+    url = form['url']
+    link = link_generator()
+    item = Link(link = link, visits='0', url=url, user_id=current_user.id)
+    db.session.add(item)
+    db.session.commit()
+    print(item)
+    return jsonify(success=True)
+
+
+def link_generator(size=8, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
 if __name__ == '__main__':
     app.run()

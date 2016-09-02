@@ -24,6 +24,25 @@
                 </div>
             </div>
         </nav>
+        <div class='col-md-12'>
+            <div style="display:none;" class="alert alert-success" id="success_message">
+                Your link has been successfully added.
+            </div>
+            <table class="table table-striped" id="links_table">
+                <tr>
+                    <th>URL</th>
+                    <th>Link</th>
+                    <th>Visits</th>
+                </tr>
+                {% for link in links %}
+                    <tr>
+                        <td>{{ link.url }}</td>
+                        <td>{{ link.link }}</td>
+                        <td>{{ link.visits }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
         <div class="col-md-3">
             <form id='add_link'>
                 <label>URL</label>
@@ -37,10 +56,21 @@
         <script>
             $("#add_link").submit(function(e) {
                 e.preventDefault();
+                var formData = {
+                    'url': $('#url').val()
+                }
                 $.ajax({
-                    type: "POST",
-                    url: "{{ url_for }}"
-                })
+                    type: 'POST',
+                    url: '/link',
+                    data: formData,
+                    success: function(json) {
+                        if(json.success) {
+                            $('#url').val("");
+                            $('#success_message').show();
+                            $('#links_table').load('/ #links_table');
+                        }
+                    }
+                });
             })
         </script>
     </body>
