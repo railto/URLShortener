@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, request, jsonify
+from flask import Flask, render_template, url_for, request, jsonify, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, login_required, current_user
 from dotenv import load_dotenv
@@ -71,6 +71,16 @@ def add_link():
     db.session.commit()
     print(item)
     return jsonify(success=True)
+
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def route(path):
+    url = Link.query.filter_by(link=path).first_or_404()
+    return redirect(url.url, code=302)
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
 
 
 def link_generator(size=8, chars=string.ascii_uppercase + string.digits):
