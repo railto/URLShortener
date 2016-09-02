@@ -57,7 +57,7 @@ security = Security(app, user_datastore)
 @login_required
 def home():
     links = Link.query.all()
-    return render_template('index.html', links=links)
+    return render_template('index.html', links=links, loggedin=True)
 
 @app.route('/link', methods=['post'])
 @login_required
