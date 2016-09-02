@@ -76,12 +76,13 @@ def add_link():
 @app.route("/<path:path>")
 def route(path):
     url = Link.query.filter_by(link=path).first_or_404()
+    url.visits = Link.visits + 1
+    db.session.commit()
     return redirect(url.url, code=302)
 
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
-
 
 def link_generator(size=8, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
