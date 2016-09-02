@@ -8,8 +8,7 @@ import random
 
 # Check to see if we have a .env file and load it if we do
 if os.path.exists(os.path.join(os.path.dirname(__file__), '.env')):
-    dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
-    load_dotenv(dotenv_path)
+    load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 # Start building the app
 app = Flask(__name__)
