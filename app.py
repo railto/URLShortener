@@ -55,7 +55,7 @@ security = Security(app, user_datastore)
 
 @app.route('/', methods=['get'])
 @login_required
-def home():
+def home(page=1):
     links = Link.query.all()
     return render_template('index.html', links=links, loggedin=True)
 
@@ -69,6 +69,14 @@ def add_link():
     db.session.add(item)
     db.session.commit()
     print(item)
+    return jsonify(success=True)
+
+@app.route('/link/<int:id>', methods=['delete'])
+@login_required
+def delete_link(id):
+    link = Link.query.filter_by(id=id).first()
+    db.session.delete(link)
+    db.session.commit()
     return jsonify(success=True)
 
 @app.route("/", defaults={"path": ""})
