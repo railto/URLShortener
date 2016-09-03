@@ -19,7 +19,7 @@
             {% for link in links %}
                 <tr>
                     <td>{{ link.url }}</td>
-                    <td><a href="http://msrr.ws/{{ link.link }}" target="_blank">{{ link.link }}</a></td>
+                    <td><a href="{{ request.url_root }}{{ link.link }}" target="_blank">{{ link.link }}</a></td>
                     <td>{{ link.visits }}</td>
                     <td><button class="btn btn-danger delete-button" id="{{ link.id }}">Delete</button></td>
                 </tr>
