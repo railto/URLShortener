@@ -6,6 +6,9 @@
     <div style="display:none;" class="alert alert-success" id="link_deleted_message">
         Your link has been successfully deleted.
     </div>
+    <div style="display:none;" class="alert alert-danger" id="link_add_failed_message">
+        Your link could not be added, perhaps you are trying to create a duplicate.
+    </div>
     <table class="table table-striped table-bordered" id="links_table">
         <thead>
             <tr>
@@ -50,6 +53,9 @@
                         $('#url').val("");
                         $('#link_added_message').show();
                         $('#links_table').load('/ #links_table');
+                    } else {
+                        $('#url').val("");
+                        $('#link_add_failed_message').show();
                     }
                 }
             });

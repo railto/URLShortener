@@ -1,5 +1,6 @@
 from flask import Flask, render_template, url_for, request, jsonify, redirect
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
 from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, login_required, current_user
 from dotenv import load_dotenv
 import os
@@ -62,13 +63,16 @@ def home(page=1):
 @app.route('/link', methods=['post'])
 @login_required
 def add_link():
-    form = request.form
-    url = form['url']
-    link = link_generator()
-    item = Link(link = link, visits='0', url=url, user_id=current_user.id)
-    db.session.add(item)
-    db.session.commit()
-    return jsonify(success=True)
+    try:
+        form = request.form
+        url = form['url']
+        link = link_generator()
+        item = Link(link = link, visits='0', url=url, user_id=current_user.id)
+        db.session.add(item)
+        db.session.commit()
+        return jsonify(success=True)
+    except IntegrityError:
+        return jsonify(success=False)
 
 @app.route('/link/<int:id>', methods=['delete'])
 @login_required
