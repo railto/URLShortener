@@ -16,28 +16,11 @@
         {% for link in links %}
             <tr>
                 <td>{{ link.url }}</td>
-                <td>{{ link.link }}</td>
+                <td><a href="http://msrr.ws/{{ link.link }}" target="_blank">{{ link.link }}</a></td>
                 <td>{{ link.visits }}</td>
                 <td><button class="btn btn-danger delete-button" id="{{ link.id }}">Delete</button></td>
             </tr>
         {% endfor %}
-        <ul class="pagination">
-            {% if links.has_prev %}
-                <li>
-                    <a href="#" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
-                    </a>
-                </li>
-            {% endif %}
-            {% if links.has_next %}
-                <li>
-                    <a href="#" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
-            {% endif %}
-
-        </ul>
     </table>
     <div class="col-md-3">
         <form id='add_link'>

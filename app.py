@@ -68,7 +68,6 @@ def add_link():
     item = Link(link = link, visits='0', url=url, user_id=current_user.id)
     db.session.add(item)
     db.session.commit()
-    print(item)
     return jsonify(success=True)
 
 @app.route('/link/<int:id>', methods=['delete'])
