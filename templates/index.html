@@ -31,8 +31,10 @@
     </table>
     <div class="col-md-3">
         <form id='add_link'>
-            <label>URL</label>
+            <label for="url">URL</label>
             <input type="text" id="url" class="form-control">
+            <label for="link">Link</label>
+            <input type="text" id="link" class="form-control" placeholder="blank for auto generated">
             <br />
             <input type="submit" value="Add URL" class="btn btn-primary">
         </form>
@@ -46,15 +48,18 @@
                 type: 'POST',
                 url: '/link',
                 data: {
-                    'url': $('#url').val()
+                    'url': $('#url').val(),
+                    'link': $('#link').val()
                 },
                 success: function(json) {
                     if(json.success) {
                         $('#url').val("");
+                        $('#link').val("");
                         $('#link_added_message').show();
                         $('#links_table').load('/ #links_table');
                     } else {
                         $('#url').val("");
+                        $('#link').val("");
                         $('#link_add_failed_message').show();
                     }
                 }

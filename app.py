@@ -72,7 +72,10 @@ def add_link():
     try:
         form = request.form
         url = form['url']
-        link = link_generator()
+        if len(form['link']) > 0:
+            link = form['link']
+        else:
+            link = link_generator()
         item = Link(link=link, visits='0', url=url, user_id=current_user.id)
         db.session.add(item)
         db.session.commit()
@@ -96,7 +99,11 @@ def route(path):
     url = Link.query.filter_by(link=path).first_or_404()
     url.visits = Link.visits + 1
     db.session.commit()
-    return redirect(url.url, code=302)
+    if "http://" not in url.url and "https://" not in url.url:
+        link = "http://"+url.url
+    else:
+        link = url.url
+    return redirect(link, code=302)
 
 
 @app.errorhandler(404)
