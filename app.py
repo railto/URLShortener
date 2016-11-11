@@ -77,8 +77,8 @@ def add_link():
 @app.route('/api/link', methods=['post'])
 @http_auth_required
 def api_add_link():
-    form = request.form
-    link = create_link(form)
+    input = request.get_json()
+    link = create_link(input)
     return link
 
 
@@ -112,14 +112,14 @@ def page_not_found(e):
 def create_link(params):
     try:
         url = params['url']
-        if len(params['link']) > 0:
+        if 'link' in params and len(params['link']) > 0:
             link = params['link']
         else:
             link = link_generator()
         item = Link(link=link, visits='0', url=url, user_id=current_user.id)
         db.session.add(item)
         db.session.commit()
-        return jsonify(success=True)
+        return jsonify(success=True, link=link)
     except IntegrityError:
         return jsonify(success=False)
 
