@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, redirect
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
-from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, login_required, current_user
+from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, login_required, current_user, http_auth_required
 from dotenv import load_dotenv
 import os
 import string
@@ -69,6 +69,14 @@ def home(page=1):
 @app.route('/link', methods=['post'])
 @login_required
 def add_link():
+    form = request.form
+    link = create_link(form)
+    return link
+
+
+@app.route('/api/link', methods=['post'])
+@http_auth_required
+def api_add_link():
     form = request.form
     link = create_link(form)
     return link
