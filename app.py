@@ -69,19 +69,9 @@ def home(page=1):
 @app.route('/link', methods=['post'])
 @login_required
 def add_link():
-    try:
-        form = request.form
-        url = form['url']
-        if len(form['link']) > 0:
-            link = form['link']
-        else:
-            link = link_generator()
-        item = Link(link=link, visits='0', url=url, user_id=current_user.id)
-        db.session.add(item)
-        db.session.commit()
-        return jsonify(success=True)
-    except IntegrityError:
-        return jsonify(success=False)
+    form = request.form
+    link = create_link(form)
+    return link
 
 
 @app.route('/link/<int:id>', methods=['delete'])
@@ -109,6 +99,21 @@ def route(path):
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
+
+
+def create_link(params):
+    try:
+        url = params['url']
+        if len(params['link']) > 0:
+            link = params['link']
+        else:
+            link = link_generator()
+        item = Link(link=link, visits='0', url=url, user_id=current_user.id)
+        db.session.add(item)
+        db.session.commit()
+        return jsonify(success=True)
+    except IntegrityError:
+        return jsonify(success=False)
 
 
 def link_generator(size=8, chars=string.ascii_uppercase + string.digits):
