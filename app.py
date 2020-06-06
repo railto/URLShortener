@@ -1,94 +1,113 @@
-from flask import Flask, render_template, request, jsonify, redirect
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.exc import IntegrityError
-from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin, login_required, current_user, http_auth_required
-from dotenv import load_dotenv
-import os
+from datetime import datetime
 import string
 import random
 
-# Check to see if we have a .env file and load it if we do
-if os.path.exists(os.path.join(os.path.dirname(__file__), '.env')):
-    load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
+from flask import Flask, render_template, redirect, flash, url_for, request, jsonify
+from sqlalchemy.exc import IntegrityError
+from flask_login import login_user, current_user, logout_user, login_required
+from werkzeug.urls import url_parse
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_login import LoginManager, UserMixin
+from flask_bcrypt import Bcrypt
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired, Email
 
-# Start building the app
+from config import Config
+
 app = Flask(__name__)
-app.config['DEBUG'] = os.environ.get('DEBUG')
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
-app.config['SECURITY_PASSWORD_HASH'] = 'bcrypt'
-app.config['SECURITY_PASSWORD_SALT'] = os.environ.get('SECRET_KEY')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+app.config.from_object(Config)
 
-# Setup DB
 db = SQLAlchemy(app)
-
-# Define models
-roles_users = db.Table('roles_users',
-                       db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
-                       db.Column('role_id', db.Integer(), db.ForeignKey('role.id')))
-
-
-class Role(db.Model, RoleMixin):
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(80), unique=True)
-    description = db.Column(db.String(255))
+migrate = Migrate(app, db)
+login = LoginManager(app)
+bcrypt = Bcrypt(app)
+login.login_view = "login"
 
 
 class User(db.Model, UserMixin):
+    __tablename__ = "users"
+
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(255), unique=True)
+    name = db.Column(db.String(255))
+    email = db.Column(db.String(255), index=True, unique=True)
     password = db.Column(db.String(255))
-    active = db.Column(db.Boolean())
-    confirmed_at = db.Column(db.DateTime())
-    roles = db.relationship('Role', secondary=roles_users,
-                            backref=db.backref('users', lazy='dynamic'))
+    updated_at = db.Column(
+        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __init__(self, name, email, password):
+        self.name = name
+        self.email = email
+        self.password = bcrypt.generate_password_hash(
+            password, app.config["BCRYPT_LOG_ROUNDS"]
+        ).decode()
 
 
 class Link(db.Model):
+    __tablename__ = "links"
+
     id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer(), db.ForeignKey("users.id"))
     link = db.Column(db.String(16), unique=True)
     visits = db.Column(db.Integer)
     url = db.Column(db.String(255), unique=True)
 
-    user_id = db.Column(db.Integer(), db.ForeignKey('user.id'))
+
+class LoginForm(FlaskForm):
+    email = StringField(
+        "Email Address",
+        validators=[DataRequired(), Email()],
+        render_kw={"placeholder": "Email Address"},
+    )
+    password = PasswordField(
+        "Password", validators=[DataRequired()], render_kw={"placeholder": "Password"}
+    )
+    submit = SubmitField("Sign In")
 
 
-# Setup Flask-Security
-user_datastore = SQLAlchemyUserDatastore(db, User, Role)
-security = Security(app, user_datastore)
+@login.user_loader
+def load_user(id):
+    return User.query.get(int(id))
 
 
-@app.route('/', methods=['get'])
+@app.route("/")
 @login_required
-def home(page=1):
+def index():
     links = Link.query.all()
-    return render_template('index.html', links=links, loggedin=True)
+    return render_template("index.html", links=links)
 
 
-@app.route('/link', methods=['post'])
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        redirect(url_for("index"))
+
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user is None or not bcrypt.check_password_hash(
+                user.password, form.password.data
+        ):
+            flash("Invalid email address or password")
+            return render_template("login.html", title="Sign In", form=form), 401
+        login_user(user)
+        next_page = request.args.get("next")
+        if not next_page or url_parse(next_page).netloc != "":
+            next_page = url_for("index")
+        flash("You have been logged in")
+        return redirect(next_page)
+    return render_template("login.html", title="Sign In", form=form)
+
+
+@app.route("/link", methods=["post"])
 @login_required
 def add_link():
     form = request.form
     link = create_link(form)
     return link
-
-
-@app.route('/api/link', methods=['post'])
-@http_auth_required
-def api_add_link():
-    input = request.get_json()
-    link = create_link(input)
-    return link
-
-
-@app.route('/link/<int:id>', methods=['delete'])
-@login_required
-def delete_link(id):
-    link = Link.query.filter_by(id=id).first()
-    db.session.delete(link)
-    db.session.commit()
-    return jsonify(success=True)
 
 
 @app.route("/", defaults={"path": ""})
@@ -98,15 +117,10 @@ def route(path):
     url.visits = Link.visits + 1
     db.session.commit()
     if "http://" not in url.url and "https://" not in url.url:
-        link = "http://"+url.url
+        link = "http://" + url.url
     else:
         link = url.url
     return redirect(link, code=302)
-
-
-@app.errorhandler(404)
-def page_not_found(e):
-    return render_template('404.html'), 404
 
 
 def create_link(params):
@@ -125,8 +139,8 @@ def create_link(params):
 
 
 def link_generator(size=8, chars=string.ascii_lowercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
+    return "".join(random.choice(chars) for _ in range(size))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run()
