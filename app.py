@@ -55,9 +55,10 @@ class Link(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer(), db.ForeignKey("users.id"))
-    link = db.Column(db.String(16), unique=True)
+    link = db.Column(db.String(16), unique=True, index=True)
+    notes = db.Column(db.Text(), nullable=True)
     visits = db.Column(db.Integer)
-    url = db.Column(db.String(255), unique=True)
+    url = db.Column(db.String(255))
 
 
 class LoginForm(FlaskForm):
@@ -148,12 +149,11 @@ def page_not_found(e):
 
 def create_link(params):
     try:
-        url = params["url"]
         if "link" in params and len(params["link"]) > 0:
             link = params["link"]
         else:
             link = link_generator()
-        item = Link(link=link, visits="0", url=url, user_id=current_user.id)
+        item = Link(link=link, visits="0", url=params["url"], user_id=current_user.id, notes=params["notes"])
         db.session.add(item)
         db.session.commit()
         return jsonify(success=True, link=link)
