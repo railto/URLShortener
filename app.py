@@ -1,3 +1,4 @@
+import sentry_sdk
 from datetime import datetime
 import string
 import random
@@ -13,11 +14,14 @@ from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email
+from sentry_sdk.integrations.flask import FlaskIntegration
 
 from config import Config
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+sentry_sdk.init(dsn=app.config["SENTRY_DSN"], integrations=[FlaskIntegration()])
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -89,7 +93,7 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user is None or not bcrypt.check_password_hash(
-                user.password, form.password.data
+            user.password, form.password.data
         ):
             flash("Invalid email address or password")
             return render_template("login.html", title="Sign In", form=form), 401
@@ -118,7 +122,7 @@ def add_link():
     return link
 
 
-@app.route('/link/<int:id>', methods=['delete'])
+@app.route("/link/<int:id>", methods=["delete"])
 @login_required
 def delete_link(id):
     link = Link.query.filter_by(id=id).first()
@@ -140,14 +144,19 @@ def route(path):
     return redirect(link, code=302)
 
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template("404.html"), 404
+
+
 def create_link(params):
     try:
-        url = params['url']
-        if 'link' in params and len(params['link']) > 0:
-            link = params['link']
+        url = params["url"]
+        if "link" in params and len(params["link"]) > 0:
+            link = params["link"]
         else:
             link = link_generator()
-        item = Link(link=link, visits='0', url=url, user_id=current_user.id)
+        item = Link(link=link, visits="0", url=url, user_id=current_user.id)
         db.session.add(item)
         db.session.commit()
         return jsonify(success=True, link=link)
