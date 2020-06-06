@@ -123,6 +123,14 @@ def route(path):
     return redirect(link, code=302)
 
 
+@app.route("/logout")
+def logout():
+    if current_user.is_authenticated:
+        logout_user()
+        flash("You have been logged out")
+    return redirect(url_for("index"))
+
+
 def create_link(params):
     try:
         url = params['url']
