@@ -102,6 +102,14 @@ def login():
     return render_template("login.html", title="Sign In", form=form)
 
 
+@app.route("/logout")
+def logout():
+    if current_user.is_authenticated:
+        logout_user()
+        flash("You have been logged out")
+    return redirect(url_for("index"))
+
+
 @app.route("/link", methods=["post"])
 @login_required
 def add_link():
@@ -121,14 +129,6 @@ def route(path):
     else:
         link = url.url
     return redirect(link, code=302)
-
-
-@app.route("/logout")
-def logout():
-    if current_user.is_authenticated:
-        logout_user()
-        flash("You have been logged out")
-    return redirect(url_for("index"))
 
 
 def create_link(params):
