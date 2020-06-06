@@ -118,6 +118,15 @@ def add_link():
     return link
 
 
+@app.route('/link/<int:id>', methods=['delete'])
+@login_required
+def delete_link(id):
+    link = Link.query.filter_by(id=id).first()
+    db.session.delete(link)
+    db.session.commit()
+    return jsonify(success=True)
+
+
 @app.route("/", defaults={"path": ""})
 @app.route("/<path:path>")
 def route(path):
