@@ -18,7 +18,7 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 
 from config import Config
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 app.config.from_object(Config)
 
 sentry_sdk.init(dsn=app.config["SENTRY_DSN"], integrations=[FlaskIntegration()])
@@ -63,12 +63,9 @@ class Link(db.Model):
 class LoginForm(FlaskForm):
     email = StringField(
         "Email Address",
-        validators=[DataRequired(), Email()],
-        render_kw={"placeholder": "Email Address"},
-    )
+        validators=[DataRequired(), Email()])
     password = PasswordField(
-        "Password", validators=[DataRequired()], render_kw={"placeholder": "Password"}
-    )
+        "Password", validators=[DataRequired()])
     submit = SubmitField("Sign In")
 
 
