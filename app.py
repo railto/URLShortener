@@ -11,12 +11,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, UserMixin
 from flask_bcrypt import Bcrypt
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired, Email
 from sentry_sdk.integrations.flask import FlaskIntegration
 
 from config import Config
+from forms import LoginForm
 
 app = Flask(__name__, static_folder='static')
 app.config.from_object(Config)
@@ -59,15 +57,6 @@ class Link(db.Model):
     notes = db.Column(db.Text(), nullable=True)
     visits = db.Column(db.Integer)
     url = db.Column(db.String(255))
-
-
-class LoginForm(FlaskForm):
-    email = StringField(
-        "Email Address",
-        validators=[DataRequired(), Email()])
-    password = PasswordField(
-        "Password", validators=[DataRequired()])
-    submit = SubmitField("Sign In")
 
 
 @login.user_loader
