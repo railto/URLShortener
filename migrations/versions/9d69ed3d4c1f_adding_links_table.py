@@ -25,7 +25,10 @@ def upgrade():
         sa.Column("visits", sa.Integer(), nullable=True),
         sa.Column("url", sa.String(length=255), nullable=True),
         sa.Column("user_id", sa.Integer(), nullable=True),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"],),
+        sa.ForeignKeyConstraint(
+            ["user_id"],
+            ["users.id"],
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("link"),
         sa.UniqueConstraint("url"),

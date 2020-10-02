@@ -15,7 +15,13 @@ def create_link(params):
             link = params["link"]
         else:
             link = link_generator()
-        item = Link(link=link, visits="0", url=params["url"], user_id=current_user.id, notes=params["notes"])
+        item = Link(
+            link=link,
+            visits="0",
+            url=params["url"],
+            user_id=current_user.id,
+            notes=params["notes"],
+        )
         db.session.add(item)
         db.session.commit()
         return jsonify(success=True, link=link)

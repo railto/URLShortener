@@ -16,7 +16,7 @@ bcrypt = Bcrypt()
 
 
 def create_app(config_class=Config):
-    app = Flask(__name__, static_folder='static')
+    app = Flask(__name__, static_folder="static")
     app.config.from_object(Config)
 
     sentry_sdk.init(dsn=app.config["SENTRY_DSN"], integrations=[FlaskIntegration()])
@@ -28,6 +28,7 @@ def create_app(config_class=Config):
     bcrypt.init_app(app)
 
     from app.views import bp
+
     app.register_blueprint(bp)
 
     return app
