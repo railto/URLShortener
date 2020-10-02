@@ -1,4 +1,5 @@
 import sentry_sdk
+from os import path
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -16,7 +17,12 @@ bcrypt = Bcrypt()
 
 
 def create_app(config_class=Config):
-    app = Flask(__name__, static_folder="static")
+    templates_path = path.abspath(path.join(path.dirname(__file__), "..", "templates"))
+    static_path = path.abspath(
+        path.join(path.dirname(__file__), "..", "static")
+    )
+
+    app = Flask(__name__, template_folder=templates_path, static_folder=static_path)
     app.config.from_object(Config)
 
     sentry_sdk.init(dsn=app.config["SENTRY_DSN"], integrations=[FlaskIntegration()])
@@ -27,7 +33,7 @@ def create_app(config_class=Config):
     login.login_view = "main.login"
     bcrypt.init_app(app)
 
-    from app.views import bp
+    from src.views import bp
 
     app.register_blueprint(bp)
 

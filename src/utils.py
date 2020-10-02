@@ -5,8 +5,8 @@ from flask import jsonify
 from sqlalchemy.exc import IntegrityError
 from flask_login import current_user
 
-from app import db
-from app.models import Link
+from src import db
+from src.models import Link
 
 
 def create_link(params):

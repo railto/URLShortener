@@ -2,10 +2,10 @@ from flask import Blueprint, render_template, redirect, url_for, request, jsonif
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.urls import url_parse
 
-from app import bcrypt, db
-from app.forms import LoginForm
-from app.utils import create_link
-from app.models import User, Link
+from src import bcrypt, db
+from src.forms import LoginForm
+from src.utils import create_link
+from src.models import User, Link
 
 bp = Blueprint("main", __name__)
 
