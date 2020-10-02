@@ -2,12 +2,12 @@ from flask import Blueprint, render_template, redirect, url_for, request, jsonif
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.urls import url_parse
 
-from app import bcrypt, db
-from app.forms import LoginForm
-from app.utils import create_link
-from app.models import User, Link
+from src import bcrypt, db
+from src.forms import LoginForm
+from src.utils import create_link
+from src.models import User, Link
 
-bp = Blueprint('main', __name__)
+bp = Blueprint("main", __name__)
 
 
 @bp.route("/")
@@ -26,7 +26,7 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user is None or not bcrypt.check_password_hash(
-                user.password, form.password.data
+            user.password, form.password.data
         ):
             return render_template("login.html", title="Sign In", form=form), 401
         login_user(user)

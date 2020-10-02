@@ -5,8 +5,8 @@ from flask import jsonify
 from sqlalchemy.exc import IntegrityError
 from flask_login import current_user
 
-from app import db
-from app.models import Link
+from src import db
+from src.models import Link
 
 
 def create_link(params):
@@ -15,7 +15,13 @@ def create_link(params):
             link = params["link"]
         else:
             link = link_generator()
-        item = Link(link=link, visits="0", url=params["url"], user_id=current_user.id, notes=params["notes"])
+        item = Link(
+            link=link,
+            visits="0",
+            url=params["url"],
+            user_id=current_user.id,
+            notes=params["notes"],
+        )
         db.session.add(item)
         db.session.commit()
         return jsonify(success=True, link=link)
